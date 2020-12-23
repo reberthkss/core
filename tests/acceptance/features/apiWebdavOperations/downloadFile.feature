@@ -129,3 +129,66 @@ Feature: download file
       | new         | "sample,1.txt" |
       | new         | ",,,.txt"      |
       | new         | ",,,.,"        |
+
+  Scenario Outline: download a file with single part ranges
+    Given using <dav_version> DAV path
+    When user "Alice" downloads file "/welcome.txt" with range "bytes=0-51" using the WebDAV API
+    Then the HTTP status code should be "206"
+    And the following headers should be set
+      | header         | value         |
+      | Content-Length | 52            |
+      | Content-Range  | bytes 0-51/52 |
+    And the downloaded content should be "Welcome this is just an example file for developers."
+    Examples:
+      | dav_version |
+      | old         |
+      | new         |
+
+  Scenario Outline: download a file with multipart ranges
+    Given using <dav_version> DAV path
+    When user "Alice" downloads file "/welcome.txt" with range "bytes=0-6, 40-51" using the WebDAV API
+    Then the HTTP status code should be "206"
+    And the following headers should be set
+      | header         | value         |
+      | Content-Length | 231            |
+      | Content-Type   | multipart/byteranges; boundary=b4eb2f6517ce873b |
+    And the downloaded content for multipart byterange should be:
+     """
+     \r
+     --b4eb2f6517ce873b\r
+     Content-type: text/plain;charset=UTF-8\r
+     Content-range: bytes 0-6/52\r
+     \r
+     Welcome\r
+     --b4eb2f6517ce873b\r
+     Content-type: text/plain;charset=UTF-8\r
+     Content-range: bytes 40-51/52\r
+     \r
+      developers.\r
+     --b4eb2f6517ce873b--\r
+
+     """
+    Examples:
+      | dav_version |
+      | old         |
+      | new         |
+
+  Scenario Outline: download a file with range out of bounds
+    Given using <dav_version> DAV path
+    When user "Alice" downloads file "/welcome.txt" with range "bytes=0-55" using the WebDAV API
+    Then the HTTP status code should be "206"
+    And the downloaded content should be "Welcome this is just an example file for developers."
+    Examples:
+      | dav_version |
+      | old         |
+      | new         |
+
+  Scenario Outline: download a file with invalid range
+    Given using <dav_version> DAV path
+    When user "Alice" downloads file "/welcome.txt" with range "bytes=-11" using the WebDAV API
+    Then the HTTP status code should be "206"
+    And the downloaded content should be "developers."
+    Examples:
+      | dav_version |
+      | old         |
+      | new         |

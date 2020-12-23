@@ -883,6 +883,17 @@ trait WebDav {
 		);
 	}
 
+    /**
+     * @Then the downloaded content for multipart byterange should be:
+     *
+     * @param PyStringNode $content
+     *
+     */
+    public function theDownloadedContentForMultipartByterangeShouldBe(PyStringNode $content)
+    {
+        $this->downloadedContentShouldBe($content->getRaw());
+    }
+
 	/**
 	 * @Then /^the downloaded content should be "([^"]*)" plus end-of-line$/
 	 *
